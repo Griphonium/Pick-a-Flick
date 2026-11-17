@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Queue Up – rank your Letterboxd watchlist</title>
+<style>
+:root{--bg:#eef0f6;--surf:#fff;--ink:#14162b;--mute:#5d6280;--line:#d9dcea;--acc:#e0245e;--acc2:#0b8f8f;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#10111f;--surf:#1a1c30;--ink:#eef0fb;--mute:#9aa0c4;--line:#2c2f4a;--acc:#ff4d85;--acc2:#3cc9c9;--onacc:#10111f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:2.2rem;line-height:1;margin:8px 0 4px;letter-spacing:-.03em}
+.sub{color:var(--mute);margin:0 0 18px}
+nav{display:flex;gap:6px;margin-bottom:18px}
+nav button{flex:1;padding:10px;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;gap:12px;align-items:center}.grow{flex:1;min-width:0}
+.rank{font-size:1.5rem;font-weight:800;width:2.4ch;color:var(--acc);text-align:center}
+.t{font-weight:700}.meta{color:var(--mute);font-size:.88rem}
+.btn{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--ink);padding:9px 14px;font-weight:600}
+.btn.pri{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.pick{min-height:190px;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;padding:16px;border-radius:16px;border:2px solid var(--line);background:var(--surf);color:var(--ink);font:inherit;cursor:pointer}
+.pick:hover{border-color:var(--acc)}.pick .t{font-size:1.35rem;line-height:1.1}
+.empty{color:var(--mute);text-align:center;padding:26px 8px}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 14px}.bar i{display:block;height:100%;background:var(--acc2)}
+@media (max-width:480px){.duel{grid-template-columns:1fr}.pick{min-height:120px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Queue Up</h1>
+<p class="sub">Import your Letterboxd watchlist, then rank it one head-to-head at a time.</p>
+<nav id="nav" role="tablist"></nav>
+<div id="view"></div>
+</main>
+<script>
+let S={items:[],tab:"import",pair:null,msg:""};
+try{const x=JSON.parse(localStorage.getItem("queueup-lb")||"null");if(x&&x.items){S.items=x.items;if(S.items.length)S.tab="rank"}}catch(e){}
+const save=()=>{try{localStorage.setItem("queueup-lb",JSON.stringify({items:S.items}))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=id=>document.getElementById(id);
+
+function parseCSV(text){
+  const rows=[];let row=[],f="",q=false;
+  text=text.replace(/^\uFEFF/,"");
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c=='"'){if(text[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c=='"')q=true;
+    else if(c==","){row.push(f);f=""}
+    else if(c=="\n"||c=="\r"){if(c=="\r"&&text[i+1]=="\n")i++;row.push(f);rows.push(row);row=[];f=""}
+    else f+=c;
+  }
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+function importCSV(text){
+  const rows=parseCSV(text);if(rows.length<2){S.msg="That file looks empty.";return render()}
+  const h=rows[0].map(x=>x.trim().toLowerCase());
+  const ni=h.indexOf("name"),yi=h.indexOf("year"),ui=h.indexOf("letterboxd uri");
+  if(ni<0){S.msg="Couldn’t find a Name column. Use watchlist.csv from your Letterboxd export.";return render()}
+  const seen=new Set(S.items.map(x=>x.name+"|"+x.year));let added=0;
+  rows.slice(1).forEach(r=>{
+    const name=(r[ni]||"").trim(),year=yi>=0?(r[yi]||"").trim():"",uri=ui>=0?(r[ui]||"").trim():"";
+    if(!name||seen.has(name+"|"+year))return;seen.add(name+"|"+year);
+    S.items.push({id:"i"+S.items.length+"_"+Date.now(),name,year,uri,elo:1000,n:0});added++;
+  });
+  S.msg=`Imported ${added} titles.`;S.tab="rank";S.pair=null;save();render();
+}
+function pickPair(){
+  if(S.items.length<2)return null;
+  const a=[...S.items].sort((x,y)=>x.n-y.n||Math.random()-.5)[0];
+  const near=S.items.filter(x=>x!==a).sort((x,y)=>Math.abs(x.elo-a.elo)-Math.abs(y.elo-a.elo)).slice(0,4);
+  const b=near[Math.floor(Math.random()*near.length)];
+  return Math.random()<.5?[a.id,b.id]:[b.id,a.id];
+}
+function win(id){
+  const w=S.items.find(x=>x.id===id),l=S.items.find(x=>x.id===S.pair.find(p=>p!==id));
+  const k=w.n<5?48:32,e=1/(1+Math.pow(10,(l.elo-w.elo)/400));
+  w.elo+=k*(1-e);l.elo-=k*(1-e);w.n++;l.n++;S.pair=pickPair();save();render();
+}
+const ranked=()=>[...S.items].sort((a,b)=>b.elo-a.elo);
+function exportCSV(){
+  const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  const out=["Rank,Name,Year,Letterboxd URI,Score"].concat(ranked().map((x,i)=>[i+1,q(x.name),x.year,q(x.uri),Math.round(x.elo)].join(",")));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out.join("\n")],{type:"text/csv"}));a.download="ranked-watchlist.csv";a.click();
+}
+const SAMPLE="Date,Name,Year,Letterboxd URI\n2024-01-01,Inception,2010,\n2024-01-01,Parasite,2019,\n2024-01-01,Spirited Away,2001,\n2024-01-01,Whiplash,2014,\n2024-01-01,Arrival,2016,\n2024-01-01,Get Out,2017,\n2024-01-01,Coco,2017,\n2024-01-01,Mad Max: Fury Road,2015,";
+
+function importView(){
+  return `<div class="card"><p class="t" style="margin-top:0">Choose your watchlist.csv</p><p class="meta">In Letterboxd: Settings → Import &amp; Export → Export your data. Unzip it and pick <b>watchlist.csv</b>. The file stays on your device.</p><input type="file" id="file" accept=".csv,text/csv" aria-label="Choose watchlist.csv"><p style="margin-bottom:0"><button class="btn" data-sample="1">Try with 8 sample movies</button></p></div>${S.msg?`<p class="meta">${esc(S.msg)}</p>`:""}`;
+}
+function rankView(){
+  if(S.items.length<2)return `<p class="empty">Import a watchlist first.</p>`;
+  if(!S.pair||S.pair.some(id=>!S.items.find(x=>x.id===id)))S.pair=pickPair();
+  const [a,b]=S.pair.map(id=>S.items.find(x=>x.id===id));
+  const side=x=>`<button class="pick" data-win="${x.id}"><span class="t">${esc(x.name)}</span><span class="meta">${esc(x.year)}</span></button>`;
+  const seen=S.items.filter(x=>x.n>0).length,pct=Math.round(100*seen/S.items.length);
+  return `<h2 style="margin:0">Which would you watch first?</h2><div class="duel">${side(a)}${side(b)}</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><div class="row" style="justify-content:space-between"><span class="meta">${seen} of ${S.items.length} titles compared at least once</span><button class="btn" data-skip="1">Skip pair</button></div>`;
+}
+function listView(){
+  if(!S.items.length)return `<p class="empty">Nothing to show yet.</p>`;
+  return `<div class="row" style="margin-bottom:12px;justify-content:space-between"><button class="btn pri" data-export="1">Download ranked CSV</button><button class="btn" data-reset="1">Clear list</button></div>`+
+  ranked().map((x,i)=>`<div class="card row"><div class="rank">${i+1}</div><div class="grow"><div class="t">${esc(x.name)}</div><div class="meta">${esc(x.year)}${x.n?"":" · not compared yet"}</div></div><div class="meta">${Math.round(x.elo)}</div></div>`).join("");
+}
+function render(){
+  const tabs=[["import","Import"],["rank","Rank"],["list","My ranking"]];
+  $("nav").innerHTML=tabs.map(([k,t])=>`<button role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${t}</button>`).join("");
+  $("view").innerHTML={import:importView,rank:rankView,list:listView}[S.tab]();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  if(d.tab){S.tab=d.tab;if(d.tab==="rank")S.pair=null;render()}
+  else if(d.win)win(d.win);
+  else if(d.skip){S.pair=pickPair();render()}
+  else if(d.sample)importCSV(SAMPLE);
+  else if(d.export)exportCSV();
+  else if(d.reset){if(confirm("Clear your whole list and scores?")){S.items=[];S.pair=null;S.tab="import";S.msg="";save();render()}}
+});
+document.addEventListener("change",e=>{
+  if(e.target.id==="file"&&e.target.files[0]){const r=new FileReader();r.onload=()=>importCSV(String(r.result));r.readAsText(e.target.files[0])}
+});
+render();
+</script>
+</body>
+</html>
