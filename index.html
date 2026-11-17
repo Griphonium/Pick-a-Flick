@@ -1,130 +1,249 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Queue Up – rank your Letterboxd watchlist</title>
+<title>Pick-a-Flick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eef0f6;--surf:#fff;--ink:#14162b;--mute:#5d6280;--line:#d9dcea;--acc:#e0245e;--acc2:#0b8f8f;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#10111f;--surf:#1a1c30;--ink:#eef0fb;--mute:#9aa0c4;--line:#2c2f4a;--acc:#ff4d85;--acc2:#3cc9c9;--onacc:#10111f}}
+:root{--hb:#006db0;--hbhi:#1fa3ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{--bg:#0a1128;--surf:#111d3f;--surf2:#18285a;--ink:#fff;--mute:#9fb0d6;--line:#233570}
+:root[data-theme="light"]{--bg:#f4f7fc;--surf:#fff;--surf2:#e7eff9;--ink:#05070f;--mute:#4b5d86;--line:#d3dff0}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
-h1{font-size:2.2rem;line-height:1;margin:8px 0 4px;letter-spacing:-.03em}
-.sub{color:var(--mute);margin:0 0 18px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Outfit",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 16px 60px}
+header{position:relative;text-align:center;padding:4px 52px 0}
+h1{font-size:2.6rem;line-height:1.05;margin:6px 0 2px;letter-spacing:-.03em;font-weight:800;background:linear-gradient(90deg,var(--ink),var(--hbhi));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mute);margin:0 0 18px;text-align:center}
+#theme{position:absolute;right:0;top:8px;width:42px;height:42px;display:grid;place-items:center;padding:0;border-radius:6px}
 nav{display:flex;gap:6px;margin-bottom:18px}
-nav button{flex:1;padding:10px;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
-nav button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-button:focus-visible,input:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
+nav button{flex:1;display:flex;gap:7px;align-items:center;justify-content:center;padding:10px 6px;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:6px;font:inherit;font-weight:600;cursor:pointer}
+nav button[aria-selected="true"]{background:linear-gradient(135deg,var(--hbhi),var(--hb) 60%,#004a7a);border-color:transparent;color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--hbhi);outline-offset:2px}
 .card{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
 .row{display:flex;gap:12px;align-items:center}.grow{flex:1;min-width:0}
-.rank{font-size:1.5rem;font-weight:800;width:2.4ch;color:var(--acc);text-align:center}
+.rank{font-size:1.25rem;font-weight:800;width:3ch;color:var(--hbhi);text-align:center;flex:none}
 .t{font-weight:700}.meta{color:var(--mute);font-size:.88rem}
-.btn{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--ink);padding:9px 14px;font-weight:600}
-.btn.pri{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
-.duel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
-.pick{min-height:190px;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;padding:16px;border-radius:16px;border:2px solid var(--line);background:var(--surf);color:var(--ink);font:inherit;cursor:pointer}
-.pick:hover{border-color:var(--acc)}.pick .t{font-size:1.35rem;line-height:1.1}
+.btn{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:linear-gradient(180deg,var(--surf2),var(--surf));color:var(--ink);padding:9px 14px;font-weight:600}
+.btn.pri{background:linear-gradient(135deg,var(--hbhi),var(--hb) 55%,#004a7a);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(0,109,176,.35)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;background:var(--surf);margin-bottom:14px}
+.seg button{border:0;background:none;color:var(--ink);font:inherit;font-weight:600;padding:7px 16px;border-radius:5px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:linear-gradient(135deg,var(--hbhi),var(--hb));color:#fff}
+input[type=text],input[type=search],select{font:inherit;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--ink);width:100%}
+input[type=range]{width:100%;accent-color:var(--hbhi)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.mv{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.mv .btn{margin-top:auto}
+.pp{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px;background:var(--surf2);display:block}
+.th{width:40px;height:60px;border-radius:6px;object-fit:cover;background:var(--surf2);flex:none}
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.pick{text-align:left;display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:16px;border:2px solid var(--line);background:var(--surf);color:var(--ink);font:inherit;cursor:pointer}
+.pick:hover{border-color:var(--hbhi)}.pick .t{font-size:1.1rem;line-height:1.15}.pick .pp{width:70%}
+.pk{width:100%;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.pk[aria-pressed="true"]{border-color:var(--hbhi)}
+.num{width:34px;height:34px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font-weight:800;flex:none}
+.pk[aria-pressed="true"] .num{border:0;background:linear-gradient(135deg,var(--hbhi),var(--hb));color:#fff}
 .empty{color:var(--mute);text-align:center;padding:26px 8px}
-.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 14px}.bar i{display:block;height:100%;background:var(--acc2)}
-@media (max-width:480px){.duel{grid-template-columns:1fr}.pick{min-height:120px}}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 12px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--hb),var(--hbhi))}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:12px}.filters .full{grid-column:1/-1}
+label.l{display:flex;justify-content:space-between;font-size:.85rem;color:var(--mute);margin-bottom:4px}
+summary{cursor:pointer;font-weight:700}
+footer{margin-top:28px;font-size:.78rem;color:var(--mute);text-align:center}
+footer button{background:none;border:0;color:var(--hbhi);font:inherit;cursor:pointer;text-decoration:underline}
+@media (max-width:480px){h1{font-size:2.1rem}nav button svg{display:none}}
 </style>
 </head>
 <body>
 <main>
-<h1>Queue Up</h1>
-<p class="sub">Import your Letterboxd watchlist, then rank it one head-to-head at a time.</p>
+<header><h1>Pick-a-Flick</h1><button id="theme" class="btn" data-theme-toggle="1"></button></header>
+<p class="sub">Rank what you want to watch next.</p>
 <nav id="nav" role="tablist"></nav>
 <div id="view"></div>
+<footer>This product uses the TMDB API but is not endorsed or certified by TMDB.</footer>
 </main>
 <script>
-let S={items:[],tab:"import",pair:null,msg:""};
-try{const x=JSON.parse(localStorage.getItem("queueup-lb")||"null");if(x&&x.items){S.items=x.items;if(S.items.length)S.tab="rank"}}catch(e){}
-const save=()=>{try{localStorage.setItem("queueup-lb",JSON.stringify({items:S.items}))}catch(e){}};
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=id=>document.getElementById(id);
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const svg=p=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const IC={discover:svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),rank:svg('<path d="M6 20V10M12 20V4M18 20v-7"/>'),watchlist:svg('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'),sun:svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),moon:svg('<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>')};
+let S={items:[],tab:"discover",mode:"duel",pair:null,five:null,picks:[],q:"",trending:[],results:null,gmap:{},status:"",f:{genre:"",len:6,rate:0},msg:""};
+try{const x=JSON.parse(ls.get("pf-items")||"null");if(Array.isArray(x))S.items=x}catch(e){}
+const save=()=>ls.set("pf-items",JSON.stringify(S.items));
+let theme=ls.get("pf-theme")==="light"?"light":"dark";
+const applyTheme=()=>{document.documentElement.dataset.theme=theme;$("theme").innerHTML=theme==="dark"?IC.sun:IC.moon;$("theme").setAttribute("aria-label",theme==="dark"?"Switch to light mode":"Switch to dark mode")};
+const LEN=[30,60,90,120,150,180,Infinity],LENL=["Under 30 min","Under 1 hr","Under 1.5 hr","Under 2 hr","Under 2.5 hr","Under 3 hr","Any length"];
+const fmt=m=>!m?"":m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m} min`;
+const img=(p,c)=>p?`<img class="${c}" src="https://image.tmdb.org/t/p/w185${esc(p)}" alt="" loading="lazy">`:`<div class="${c}"></div>`;
+const meta=x=>[x.year,fmt(x.rt),x.rate?"★ "+x.rate.toFixed(1):""].filter(Boolean).join(" · ");
+const has=tid=>S.items.some(x=>x.tid===tid);
+
+const API="https://pick-a-flick-api.griffintwhite-04f.workers.dev";
+async function tm(path,params={}){
+  const u=new URL(API+path);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json();
+}
+async function loadTrending(){
+  S.status="Loading…";render();
+  try{const [g,t]=await Promise.all([tm("/genre/movie/list"),tm("/trending/movie/week")]);S.gmap=Object.fromEntries(g.genres.map(x=>[x.id,x.name]));S.trending=t.results;S.status=""}
+  catch(e){S.status="Couldn’t load movies right now. Please try again in a moment."}
+  render();
+}
+async function doSearch(q){
+  if(!q.trim()){S.results=null;return render()}
+  try{S.results=(await tm("/search/movie",{query:q,include_adult:"false"})).results}catch(e){S.status="Search failed."}
+  render();
+}
+function addMovie(m){
+  if(has(m.id))return;
+  const it={id:"t"+m.id,tid:m.id,name:m.title,year:(m.release_date||"").slice(0,4),poster:m.poster_path,genres:(m.genre_ids||[]).map(g=>S.gmap[g]).filter(Boolean),rt:0,rate:m.vote_average||0,uri:"",elo:1000,n:0};
+  S.items.push(it);save();render();
+  tm("/movie/"+m.id).then(d=>{it.rt=d.runtime||0;it.genres=d.genres.map(g=>g.name);it.rate=d.vote_average||it.rate;save();if(S.tab==="watchlist")drawWL()}).catch(()=>{});
+}
+async function enrich(){
+  const todo=S.items.filter(x=>!x.tid&&!x.tried);if(!todo.length)return;
+  const total=todo.length;let done=0;
+  const w=async()=>{while(todo.length){const it=todo.shift();it.tried=true;
+    try{const r=await tm("/search/movie",Object.assign({query:it.name},it.year?{year:it.year}:{}));const m=r.results[0];
+      if(m){const d=await tm("/movie/"+m.id);it.tid=m.id;it.poster=d.poster_path;it.genres=d.genres.map(g=>g.name);it.rt=d.runtime||0;it.rate=d.vote_average||0}}catch(e){}
+    done++;S.msg=`Matching imported titles… ${done}/${total}`;const el=$("msg");if(el)el.textContent=S.msg}};
+  await Promise.all([w(),w(),w(),w()]);S.msg="Finished matching imported titles.";save();render();
+}
 
 function parseCSV(text){
-  const rows=[];let row=[],f="",q=false;
-  text=text.replace(/^\uFEFF/,"");
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
+  const rows=[];let row=[],f="",q=false;text=text.replace(/^\uFEFF/,"");
+  for(let i=0;i<text.length;i++){const c=text[i];
     if(q){if(c=='"'){if(text[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
-    else if(c=='"')q=true;
-    else if(c==","){row.push(f);f=""}
-    else if(c=="\n"||c=="\r"){if(c=="\r"&&text[i+1]=="\n")i++;row.push(f);rows.push(row);row=[];f=""}
-    else f+=c;
-  }
+    else if(c=='"')q=true;else if(c==","){row.push(f);f=""}
+    else if(c=="\n"||c=="\r"){if(c=="\r"&&text[i+1]=="\n")i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}
   if(f||row.length){row.push(f);rows.push(row)}
   return rows.filter(r=>r.some(x=>x.trim()));
 }
 function importCSV(text){
   const rows=parseCSV(text);if(rows.length<2){S.msg="That file looks empty.";return render()}
   const h=rows[0].map(x=>x.trim().toLowerCase());
-  const ni=h.indexOf("name"),yi=h.indexOf("year"),ui=h.indexOf("letterboxd uri");
-  if(ni<0){S.msg="Couldn’t find a Name column. Use watchlist.csv from your Letterboxd export.";return render()}
+  let ni=h.indexOf("name");if(ni<0)ni=h.indexOf("title");const yi=h.indexOf("year"),ui=h.indexOf("letterboxd uri");
+  if(ni<0){S.msg="Couldn’t find a Name or Title column.";return render()}
   const seen=new Set(S.items.map(x=>x.name+"|"+x.year));let added=0;
-  rows.slice(1).forEach(r=>{
-    const name=(r[ni]||"").trim(),year=yi>=0?(r[yi]||"").trim():"",uri=ui>=0?(r[ui]||"").trim():"";
+  rows.slice(1).forEach(r=>{const name=(r[ni]||"").trim(),year=yi>=0?(r[yi]||"").trim():"";
     if(!name||seen.has(name+"|"+year))return;seen.add(name+"|"+year);
-    S.items.push({id:"i"+S.items.length+"_"+Date.now(),name,year,uri,elo:1000,n:0});added++;
-  });
-  S.msg=`Imported ${added} titles.`;S.tab="rank";S.pair=null;save();render();
+    S.items.push({id:"i"+Date.now()+"_"+S.items.length,tid:0,name,year,poster:null,genres:[],rt:0,rate:0,uri:ui>=0?(r[ui]||"").trim():"",elo:1000,n:0});added++});
+  S.msg=`Imported ${added} titles.`;S.pair=null;S.five=null;S.picks=[];save();render();enrich();
 }
-function pickPair(){
-  if(S.items.length<2)return null;
-  const a=[...S.items].sort((x,y)=>x.n-y.n||Math.random()-.5)[0];
-  const near=S.items.filter(x=>x!==a).sort((x,y)=>Math.abs(x.elo-a.elo)-Math.abs(y.elo-a.elo)).slice(0,4);
-  const b=near[Math.floor(Math.random()*near.length)];
-  return Math.random()<.5?[a.id,b.id]:[b.id,a.id];
-}
-function win(id){
-  const w=S.items.find(x=>x.id===id),l=S.items.find(x=>x.id===S.pair.find(p=>p!==id));
-  const k=w.n<5?48:32,e=1/(1+Math.pow(10,(l.elo-w.elo)/400));
-  w.elo+=k*(1-e);l.elo-=k*(1-e);w.n++;l.n++;S.pair=pickPair();save();render();
-}
-const ranked=()=>[...S.items].sort((a,b)=>b.elo-a.elo);
-function exportCSV(){
-  const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
-  const out=["Rank,Name,Year,Letterboxd URI,Score"].concat(ranked().map((x,i)=>[i+1,q(x.name),x.year,q(x.uri),Math.round(x.elo)].join(",")));
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out.join("\n")],{type:"text/csv"}));a.download="ranked-watchlist.csv";a.click();
-}
-const SAMPLE="Date,Name,Year,Letterboxd URI\n2024-01-01,Inception,2010,\n2024-01-01,Parasite,2019,\n2024-01-01,Spirited Away,2001,\n2024-01-01,Whiplash,2014,\n2024-01-01,Arrival,2016,\n2024-01-01,Get Out,2017,\n2024-01-01,Coco,2017,\n2024-01-01,Mad Max: Fury Road,2015,";
 
-function importView(){
-  return `<div class="card"><p class="t" style="margin-top:0">Choose your watchlist.csv</p><p class="meta">In Letterboxd: Settings → Import &amp; Export → Export your data. Unzip it and pick <b>watchlist.csv</b>. The file stays on your device.</p><input type="file" id="file" accept=".csv,text/csv" aria-label="Choose watchlist.csv"><p style="margin-bottom:0"><button class="btn" data-sample="1">Try with 8 sample movies</button></p></div>${S.msg?`<p class="meta">${esc(S.msg)}</p>`:""}`;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function pickGroup(k){
+  if(S.items.length<k)return null;
+  const a=[...S.items].sort((x,y)=>x.n-y.n||Math.random()-.5)[0];
+  const rest=S.items.filter(x=>x!==a).map(x=>[x,Math.abs(x.elo-a.elo)+Math.random()*80]).sort((x,y)=>x[1]-y[1]).slice(0,k-1).map(x=>x[0]);
+  return shuffle([a,...rest]).map(x=>x.id);
+}
+function applyPairs(pairs,K){
+  const by=id=>S.items.find(x=>x.id===id),d={},part=new Set();
+  pairs.forEach(([w,l,s])=>{const A=by(w),B=by(l),e=1/(1+Math.pow(10,(B.elo-A.elo)/400)),x=K*(s-e);d[w]=(d[w]||0)+x;d[l]=(d[l]||0)-x;part.add(w);part.add(l)});
+  Object.keys(d).forEach(id=>by(id).elo+=d[id]);part.forEach(id=>by(id).n++);save();
+}
+function rankInfo(){
+  const comp=S.items.filter(x=>x.n>0).sort((a,b)=>b.elo-a.elo),lab={},cnt={};
+  comp.forEach(x=>{const r=Math.round(x.elo);cnt[r]=(cnt[r]||0)+1});
+  comp.forEach((x,i)=>{const r=Math.round(x.elo),first=comp.findIndex(y=>Math.round(y.elo)===r)+1;lab[x.id]=(cnt[r]>1?"T":"")+first});
+  return {order:comp.concat(S.items.filter(x=>!x.n)),lab};
+}
+function passes(x){
+  const f=S.f;
+  if(f.genre&&!x.genres.includes(f.genre))return false;
+  if(x.rt&&!(x.rt<LEN[f.len]))return false;
+  if(f.rate&&x.rate&&x.rate<f.rate)return false;
+  return true;
+}
+
+function discoverView(){
+  let h="";
+  {
+    h+=`<input type="search" id="q" placeholder="Search for a movie…" value="${esc(S.q)}" aria-label="Search movies" style="margin-bottom:14px">`;
+    const list=S.results||S.trending;
+    h+=`<h2 style="margin:0 0 10px;font-size:1.15rem">${S.results?"Results":"Popular this week"}</h2>`;
+    if(S.status)h+=`<p class="meta">${esc(S.status)}</p>`;
+    h+=list.length?`<div class="grid">${list.map(m=>`<div class="mv">${img(m.poster_path,"pp")}<span class="t">${esc(m.title)}</span><span class="meta">${esc((m.release_date||"").slice(0,4))}${m.vote_average?" · ★ "+m.vote_average.toFixed(1):""}</span><button class="btn ${has(m.id)?"":"pri"}" data-add="${m.id}" ${has(m.id)?"disabled":""}>${has(m.id)?"Added ✓":"+ Watchlist"}</button></div>`).join("")}</div>`:(S.status?"":`<p class="empty">Nothing found.</p>`);
+  }
+  h+=`<details class="card" style="margin-top:18px"><summary>Import a watchlist</summary><p class="meta">Choose a CSV with a Name (or Title) column and optionally Year. Letterboxd’s watchlist.csv works. The file stays on your device.</p><input type="file" id="file" accept=".csv,text/csv" aria-label="Choose a CSV file"><p class="meta" id="msg">${esc(S.msg)}</p></details>`;
+  return h;
 }
 function rankView(){
-  if(S.items.length<2)return `<p class="empty">Import a watchlist first.</p>`;
-  if(!S.pair||S.pair.some(id=>!S.items.find(x=>x.id===id)))S.pair=pickPair();
-  const [a,b]=S.pair.map(id=>S.items.find(x=>x.id===id));
-  const side=x=>`<button class="pick" data-win="${x.id}"><span class="t">${esc(x.name)}</span><span class="meta">${esc(x.year)}</span></button>`;
-  const seen=S.items.filter(x=>x.n>0).length,pct=Math.round(100*seen/S.items.length);
-  return `<h2 style="margin:0">Which would you watch first?</h2><div class="duel">${side(a)}${side(b)}</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><div class="row" style="justify-content:space-between"><span class="meta">${seen} of ${S.items.length} titles compared at least once</span><button class="btn" data-skip="1">Skip pair</button></div>`;
+  const k=S.mode==="duel"?2:5;
+  let h=`<div class="seg" role="group" aria-label="Ranking mode"><button data-mode="duel" aria-pressed="${S.mode==="duel"}">Head to head</button><button data-mode="five" aria-pressed="${S.mode==="five"}">Rank 5</button></div>`;
+  if(S.items.length<k)return h+`<p class="empty">Add at least ${k} movies to rank this way.</p>`;
+  const seen=S.items.filter(x=>x.n>0).length,bar=`<div class="bar" aria-hidden="true"><i style="width:${Math.round(100*seen/S.items.length)}%"></i></div><p class="meta">${seen} of ${S.items.length} movies ranked at least once</p>`;
+  const by=id=>S.items.find(x=>x.id===id);
+  if(S.mode==="duel"){
+    if(!S.pair||S.pair.some(id=>!by(id)))S.pair=pickGroup(2);
+    const side=x=>`<button class="pick" data-win="${x.id}">${img(x.poster,"pp")}<span class="t">${esc(x.name)}</span><span class="meta">${esc(x.year)}</span></button>`;
+    const [a,b]=S.pair.map(by);
+    return h+`<h2 style="margin:0;font-size:1.15rem">Which would you watch first?</h2><div class="duel">${side(a)}${side(b)}</div><div class="row"><button class="btn" data-tie="1">Tie</button><button class="btn" data-skip="1">Skip</button></div>${bar}`;
+  }
+  if(!S.five||S.five.some(id=>!by(id)))S.five=pickGroup(5),S.picks=[];
+  h+=`<h2 style="margin:0 0 10px;font-size:1.15rem">Tap your 5 in order, best first</h2>`+S.five.map(by).map(x=>{const i=S.picks.indexOf(x.id);return `<button class="card row pk" data-pick="${x.id}" aria-pressed="${i>=0}"><span class="num">${i>=0?i+1:""}</span>${img(x.poster,"th")}<span class="grow"><span class="t">${esc(x.name)}</span><br><span class="meta">${esc(meta(x))}</span></span></button>`}).join("");
+  return h+`<div class="row"><button class="btn pri" data-lock="1" ${S.picks.length<5?"disabled":""}>Lock in ranking</button><button class="btn" data-clearpicks="1">Reset</button><button class="btn" data-skip5="1">Skip</button></div>${bar}`;
 }
-function listView(){
-  if(!S.items.length)return `<p class="empty">Nothing to show yet.</p>`;
-  return `<div class="row" style="margin-bottom:12px;justify-content:space-between"><button class="btn pri" data-export="1">Download ranked CSV</button><button class="btn" data-reset="1">Clear list</button></div>`+
-  ranked().map((x,i)=>`<div class="card row"><div class="rank">${i+1}</div><div class="grow"><div class="t">${esc(x.name)}</div><div class="meta">${esc(x.year)}${x.n?"":" · not compared yet"}</div></div><div class="meta">${Math.round(x.elo)}</div></div>`).join("");
+function listHTML(){
+  const {order,lab}=rankInfo(),rows=order.filter(passes);
+  if(!S.items.length)return `<p class="empty">Your watchlist is empty. Add movies from Discover.</p>`;
+  if(!rows.length)return `<p class="empty">Nothing matches these filters.</p>`;
+  return rows.map(x=>`<div class="card row"><div class="rank" title="${lab[x.id]?"":"Not ranked yet"}">${lab[x.id]||"–"}</div>${img(x.poster,"th")}<div class="grow"><div class="t">${esc(x.name)}</div><div class="meta">${esc(meta(x))}${x.genres.length?" · "+esc(x.genres.slice(0,2).join(", ")):""}</div></div><button class="btn" data-rm="${x.id}" aria-label="Remove ${esc(x.name)}">✕</button></div>`).join("");
 }
+function watchView(){
+  const gs=[...new Set(S.items.flatMap(x=>x.genres))].sort(),f=S.f;
+  return `<div class="card filters"><div><label class="l" for="fg">Genre</label><select id="fg"><option value="">All genres</option>${gs.map(g=>`<option${g===f.genre?" selected":""}>${esc(g)}</option>`).join("")}</select></div>
+  <div><label class="l" for="fl">Length <span id="lenl">${LENL[f.len]}</span></label><input type="range" id="fl" min="0" max="6" step="1" value="${f.len}"></div>
+  <div class="full"><label class="l" for="fr">Min rating (TMDB for now, IMDb later) <span id="ratel">${f.rate?f.rate.toFixed(1)+"+":"Any"}</span></label><input type="range" id="fr" min="0" max="9" step="0.5" value="${f.rate}"></div></div>
+  <div class="row" style="margin-bottom:12px"><button class="btn pri" data-export="1">Download CSV</button><button class="btn" data-reset="1">Clear list</button></div><div id="wl">${listHTML()}</div>`;
+}
+const drawWL=()=>{const w=$("wl");if(w)w.innerHTML=listHTML()};
 function render(){
-  const tabs=[["import","Import"],["rank","Rank"],["list","My ranking"]];
-  $("nav").innerHTML=tabs.map(([k,t])=>`<button role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${t}</button>`).join("");
-  $("view").innerHTML={import:importView,rank:rankView,list:listView}[S.tab]();
+  const tabs=[["discover","Discover"],["rank","Rank"],["watchlist","Watchlist"]];
+  $("nav").innerHTML=tabs.map(([k,t])=>`<button role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${IC[k]}${t}</button>`).join("");
+  const had=document.activeElement&&document.activeElement.id==="q";
+  $("view").innerHTML={discover:discoverView,rank:rankView,watchlist:watchView}[S.tab]();
+  if(had&&$("q")){const q=$("q");q.focus();q.setSelectionRange(q.value.length,q.value.length)}
 }
+function exportCSV(){
+  const q=s=>'"'+String(s).replace(/"/g,'""')+'"',{order,lab}=rankInfo();
+  const out=["Rank,Name,Year,Runtime,Rating"].concat(order.map(x=>[lab[x.id]||"",q(x.name),x.year,x.rt||"",x.rate||""].join(",")));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out.join("\n")],{type:"text/csv"}));a.download="pick-a-flick-ranking.csv";a.click();
+}
+let st;
 document.addEventListener("click",e=>{
-  const b=e.target.closest("button");if(!b)return;const d=b.dataset;
-  if(d.tab){S.tab=d.tab;if(d.tab==="rank")S.pair=null;render()}
-  else if(d.win)win(d.win);
-  else if(d.skip){S.pair=pickPair();render()}
-  else if(d.sample)importCSV(SAMPLE);
+  const b=e.target.closest("button");if(!b)return;const d=b.dataset,by=id=>S.items.find(x=>x.id===id);
+  if(d.themeToggle){theme=theme==="dark"?"light":"dark";ls.set("pf-theme",theme);applyTheme()}
+  else if(d.tab){S.tab=d.tab;render()}
+  else if(d.mode){S.mode=d.mode;render()}
+  else if(d.add){addMovie([...(S.results||[]),...S.trending].find(m=>m.id==d.add))}
+  else if(d.win){const l=S.pair.find(p=>p!==d.win);applyPairs([[d.win,l,1]],32);S.pair=pickGroup(2);render()}
+  else if(d.tie){applyPairs([[S.pair[0],S.pair[1],.5]],32);S.pair=pickGroup(2);render()}
+  else if(d.skip){S.pair=pickGroup(2);render()}
+  else if(d.pick){const i=S.picks.indexOf(d.pick);i>=0?S.picks.splice(i,1):S.picks.push(d.pick);render()}
+  else if(d.lock){const p=[];for(let i=0;i<5;i++)for(let j=i+1;j<5;j++)p.push([S.picks[i],S.picks[j],1]);applyPairs(p,16);S.five=null;render()}
+  else if(d.clearpicks){S.picks=[];render()}
+  else if(d.skip5){S.five=null;render()}
+  else if(d.rm){S.items=S.items.filter(x=>x.id!==d.rm);S.pair=null;S.five=null;save();drawWL()}
   else if(d.export)exportCSV();
-  else if(d.reset){if(confirm("Clear your whole list and scores?")){S.items=[];S.pair=null;S.tab="import";S.msg="";save();render()}}
+  else if(d.reset){if(confirm("Clear your whole watchlist and rankings?")){S.items=[];S.pair=null;S.five=null;S.picks=[];save();render()}}
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="q"){S.q=t.value;clearTimeout(st);st=setTimeout(()=>doSearch(S.q),400)}
+  else if(t.id==="fl"){S.f.len=+t.value;$("lenl").textContent=LENL[S.f.len];drawWL()}
+  else if(t.id==="fr"){S.f.rate=+t.value;$("ratel").textContent=S.f.rate?S.f.rate.toFixed(1)+"+":"Any";drawWL()}
 });
 document.addEventListener("change",e=>{
-  if(e.target.id==="file"&&e.target.files[0]){const r=new FileReader();r.onload=()=>importCSV(String(r.result));r.readAsText(e.target.files[0])}
+  const t=e.target;
+  if(t.id==="fg"){S.f.genre=t.value;drawWL()}
+  else if(t.id==="file"&&t.files[0]){const r=new FileReader();r.onload=()=>importCSV(String(r.result));r.readAsText(t.files[0])}
 });
-render();
+applyTheme();render();
+loadTrending().then(enrich);
 </script>
 </body>
 </html>
