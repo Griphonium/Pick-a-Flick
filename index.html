@@ -200,6 +200,10 @@ footer a{color:var(--hbhi)}
 .ico{display:inline-flex;align-items:center}.ico svg{height:16px;width:auto;display:block}
 .rb .ico svg{height:20px}.rr{display:inline-flex;align-items:center;gap:4px;vertical-align:middle}
 .dh .lt{flex:0 1 460px;min-width:240px}.lt:empty{display:none}
+.so{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--ink)}
+.slg{height:34px;width:auto;max-width:110px;object-fit:contain;border-radius:6px;display:block}.slg.mine{outline:2px solid var(--hbhi);outline-offset:2px}
+:root[data-theme="dark"] .svl{display:none}:root[data-theme="light"] .svd{display:none}
+.lv{font-size:.65rem;color:#f5a623}
 @media (max-width:480px){h1{font-size:2.1rem}nav button svg{display:none}}
 </style>
 </head>
@@ -210,7 +214,7 @@ footer a{color:var(--hbhi)}
 <div id="modal"></div>
 <div id="cfm"></div>
 <div id="loc"></div>
-<footer><a href="https://www.themoviedb.org" target="_blank" rel="noopener"><img src="tmdb-logo.svg" alt="TMDB" onerror="this.style.display='none'"></a>This product uses the TMDB API but is not endorsed or certified by TMDB.<br>Where-to-watch data from <a href="https://www.justwatch.com" target="_blank" rel="noopener">JustWatch</a>.</footer>
+<footer><a href="https://www.themoviedb.org" target="_blank" rel="noopener"><img src="tmdb-logo.svg" alt="TMDB" onerror="this.style.display='none'"></a>This product uses the TMDB API but is not endorsed or certified by TMDB.<br>Where-to-watch data from <a href="https://www.movieofthenight.com" target="_blank" rel="noopener">Movie of the Night</a> and <a href="https://www.justwatch.com" target="_blank" rel="noopener">JustWatch</a>.</footer>
 </main>
 <script>
 const $=id=>document.getElementById(id);
@@ -355,11 +359,36 @@ const rchip=(k,txt,p,sub)=>`<span class="rb" title="${LBL[k]}" aria-label="${LBL
 const ratsHTML=(d,r)=>{if(!r)return "";return [r.imdb?rchip("imdb",r.imdb.toFixed(1),r.imdb*10,"/10"):"",r.rt!=null?rchip("rt",r.rt+"%",r.rt,"critics"):"",r.ra!=null?rchip("ra",r.ra+"%",r.ra,"audience"):"",r.lb?rchip("lb",r.lb.toFixed(1),r.lb*20,"/5"):""].join("")};
 const COUNTRIES=["US","CA","GB","AU","IE","NZ","DE","FR","ES","IT","NL","BE","CH","AT","SE","NO","DK","FI","PL","PT","MX","BR","AR","CL","CO","IN","JP","KR","PH","SG","MY","TH","ID","ZA","AE","SA","TR","IL","EG"].map(c=>{let n=c;try{n=new Intl.DisplayNames(["en"],{type:"region"}).of(c)||c}catch(e){}return [c,n]});
 const ccOpts=()=>COUNTRIES.map(([c,n])=>`<option value="${c}"${c===S.country?" selected":""}>${n}</option>`).join("");
+let saMem={};try{saMem=JSON.parse(ls.get("pf-sa")||"{}")}catch(e){}
+const saGet=k=>{const e=saMem[k];return e&&Date.now()-e.t<216e5?e.o:null};
+async function loadStreaming(d){
+  if(S.saOff===true||!d)return;const k=d.id+"|"+S.country;
+  const redraw=()=>{const el=$("where");if(el&&S.detail&&S.detail.d===d)el.innerHTML=whereHTML(d)};
+  if(saGet(k)){redraw();return}
+  try{
+    const r=await fetch(API+"/streaming?id="+encodeURIComponent(d.imdb_id||("movie/"+d.id))+"&country="+S.country.toLowerCase());
+    if(r.status===503){S.saOff=true;return}
+    if(!r.ok)return;
+    const j=await r.json();saMem[k]={t:Date.now(),o:j.options||[]};
+    const ks=Object.keys(saMem);if(ks.length>60)ks.sort((a,b)=>saMem[a].t-saMem[b].t).slice(0,ks.length-60).forEach(x=>delete saMem[x]);
+    ls.set("pf-sa",JSON.stringify(saMem));redraw();
+  }catch(e){}
+}
+const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const isMine=n=>S.svc.some(i=>{const a=norm((S.provs[i]||{}).n),b=norm(n);return a&&b&&(a===b||a.includes(b)||b.includes(a))});
 const whereHTML=d=>{
+  const head=`<h3 class="sh">Where to watch <select id="cc" class="ccs" aria-label="Country">${ccOpts()}</select></h3>`;
+  const o=saGet(d.id+"|"+S.country);
+  if(o){
+    const grp=(t,types)=>{const seen=new Set(),a=o.filter(x=>types.includes(String(x.type||"").toLowerCase())).filter(x=>{const k=x.id+"|"+(x.addon||"")+"|"+x.type;if(seen.has(k))return false;seen.add(k);return true});
+      return a.length?`<div class="wg"><span class="meta">${t}</span><div class="pl">${a.map(x=>{const m=isMine(x.name)?" mine":"";return `<a class="so" href="${esc(x.link||"#")}" target="_blank" rel="noopener" title="${esc([x.name,x.addon?"via "+x.addon:"",x.q?String(x.q).toUpperCase():"",x.price||""].filter(Boolean).join(" · "))}">${x.l||x.d?`<img class="slg svl${m}" src="${esc(x.l||x.d)}" alt="${esc(x.name)}"><img class="slg svd${m}" src="${esc(x.d||x.l)}" alt="">`:`<span class="nm">${esc(x.name)}</span>`}${x.price?`<span class="meta" style="font-size:.7rem">${esc(x.price)}</span>`:""}${x.exp?`<span class="lv">Leaving soon</span>`:""}</a>`}).join("")}</div></div>`:""};
+    const body=grp("Stream",["subscription"])+grp("Free",["free"])+grp("Add-on",["addon"])+grp("Rent",["rent"])+grp("Buy",["buy"]);
+    return head+(body||`<p class="meta" style="margin:0">No streaming options listed for this country.</p>`)+`<p class="meta" style="font-size:.72rem;margin:6px 0 0">Live streaming data from <a class="lk" href="https://www.movieofthenight.com" target="_blank" rel="noopener">Movie of the Night</a>.</p>`;
+  }
   const r=((d["watch/providers"]||{}).results||{})[S.country]||{};
   const grp=(t,a)=>a&&a.length?`<div class="wg"><span class="meta">${t}</span><div class="pl">${a.map(p=>`<a href="${esc(r.link||"#")}" target="_blank" rel="noopener" title="${esc(p.provider_name)}">${p.logo_path?`<img class="plogo${S.svc.includes(p.provider_id)?" mine":""}" src="https://image.tmdb.org/t/p/w92${esc(p.logo_path)}" alt="${esc(p.provider_name)}">`:esc(p.provider_name)}</a>`).join("")}</div></div>`:"";
   const body=grp("Stream",r.flatrate)+grp("Free",[...(r.free||[]),...(r.ads||[])])+grp("Rent",r.rent)+grp("Buy",r.buy);
-  return `<h3 class="sh">Where to watch <select id="cc" class="ccs" aria-label="Country">${ccOpts()}</select></h3>${body||`<p class="meta" style="margin:0">No streaming options listed for this country.</p>`}<p class="meta" style="font-size:.72rem;margin:6px 0 0">Streaming data from <a class="lk" href="https://www.justwatch.com" target="_blank" rel="noopener">JustWatch</a>.</p>`;
+  return head+(body||`<p class="meta" style="margin:0">No streaming options listed for this country.</p>`)+`<p class="meta" style="font-size:.72rem;margin:6px 0 0">Streaming data from <a class="lk" href="https://www.justwatch.com" target="_blank" rel="noopener">JustWatch</a>.</p>`;
 };
 function svcHTML(){
   const cnt={};S.svc.forEach(i=>cnt[i]=0);
@@ -384,6 +413,7 @@ async function openDetail(type,id,hist){
   const dd=S.detail&&S.detail.d;
   if(type==="movie"&&dd&&S.omdbOff!==true)fetchRatings(dd.id,dd.imdb_id).then(r=>{if(S.detail&&S.detail.id===id){S.detail.r=r;const el=$("rats");if(el)el.innerHTML=ratsHTML(dd,r)}}).catch(e=>{if(e.message==="503")S.omdbOff=true});
   if(type==="person")loadLatest(id);
+  if(type==="movie"&&dd)loadStreaming(dd);
 }
 function movieBody(d){
   const cr=d.credits||{cast:[],crew:[]},yr=(d.release_date||"").slice(0,4);
@@ -550,7 +580,7 @@ document.addEventListener("click",e=>{
   else if(d.person)openDetail("person",+d.person);
   else if(d.trailer){b.parentElement.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(d.trailer)}?autoplay=1&rel=0" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`}
   else if(d.svc){const i=+d.svc,k=S.svc.indexOf(i);k<0?S.svc.push(i):S.svc.splice(k,1);saveSvc();$("svcs").innerHTML=svcHTML();drawWL()}
-  else if(d.locok){S.locAsk=false;ls.set("pf-cc",S.country);drawLoc();render();if(S.detail&&S.detail.d&&$("where"))$("where").innerHTML=whereHTML(S.detail.d)}
+  else if(d.locok){S.locAsk=false;ls.set("pf-cc",S.country);drawLoc();render();if(S.detail&&S.detail.d&&$("where")){$("where").innerHTML=whereHTML(S.detail.d);loadStreaming(S.detail.d)}}
   else if(d.back){const h=[...S.detail.hist],p=h.pop();openDetail(p.type,p.id,h)}
   else if(d.close){S.detail=null;drawModal()}
   else if(d.dadd){toggle(S.detail.d);btnsUpd();render()}
@@ -584,7 +614,7 @@ document.addEventListener("change",e=>{
   const t=e.target;
   if(t.id==="fg"){S.f.genre=t.value;drawWL()}
   else if(t.id==="fsrc"){S.f.src=t.value;S.f.rate=0;render()}
-  else if(t.id==="cc"||t.id==="cc2"){S.country=t.value;ls.set("pf-cc",t.value);if(t.id==="cc"&&S.detail&&S.detail.d){$("where").innerHTML=whereHTML(S.detail.d);$("cc").focus()}render()}
+  else if(t.id==="cc"||t.id==="cc2"){S.country=t.value;ls.set("pf-cc",t.value);if(t.id==="cc"&&S.detail&&S.detail.d){$("where").innerHTML=whereHTML(S.detail.d);$("cc").focus();loadStreaming(S.detail.d)}render()}
   else if(t.id==="lc"){S.country=t.value}
   else if(t.id==="fs"){S.f.sort=t.value;drawWL()}
   else if(t.id==="file"&&t.files[0]){const r=new FileReader();r.onload=()=>importCSV(String(r.result));r.readAsText(t.files[0])}
